@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Email_extraction
 {
@@ -17,9 +18,30 @@ namespace Email_extraction
              */
             
             
-            //Reading from a textfile
-            // string rawFile = File.ReadAllText("../../../sample.txt");  
-            // Console.WriteLine(text);  
+            // Reading from a textfile
+            string rawFile = File.ReadAllText("../../../sample.txt");
+            string[] potentialEmails = rawFile.Split(" ");
+            int counter = 0;
+            foreach (var potentialEmail in potentialEmails)
+            {
+                int indexOfAt = potentialEmail.IndexOf("@");
+                if (indexOfAt != -1)
+                {
+                    try
+                    {
+                        string potentialSubEmail = potentialEmail.Substring(indexOfAt, 13);
+                        if (potentialSubEmail == "@softwire.com")
+                        {
+                            Console.WriteLine(potentialSubEmail);
+                            counter++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+            }
+            Console.WriteLine($"There are {counter} emails that contain '@softwire.com'");
         }
     }
 }
