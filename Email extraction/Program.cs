@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace Email_extraction
@@ -10,18 +11,22 @@ namespace Email_extraction
     {
         static void Main(string[] args)
         {
-            Dictionary<string, int> toSort = CountDomains().OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-            foreach (var domain in toSort)
-            {
-                Console.WriteLine("key: " + domain.Key.ToString() + " value: "+ domain.Value);
-            }
+            PrintDictionary(CountDomains(fetchStringFromWeb()));
 
         }
-        
-        
-        
-        
-        private static Dictionary<string, int> CountDomains()
+
+
+        private static String fetchStringFromWeb()
+        {
+            WebClient webClient = new WebClient();
+            Stream stream =
+                webClient.OpenRead(
+                    "https://raw.githubusercontent.com/techswitch-learners/email-extraction-csharp/master/EmailExtraction/Data/sample.txt");
+            StreamReader reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+
+        private static Dictionary<string, int> CountDomains(string rawFile)
         {
             /*
  Regex for email addresses
@@ -30,28 +35,34 @@ namespace Email_extraction
  sort by highest counter and print
  */
             Dictionary<String, int> dict = new Dictionary<string, int>();
-            string rawFile = File.ReadAllText("../../../sample.txt");
+            // string rawFile = File.ReadAllText("../../../sample.txt");
             string wholeEmailPattern = @"(\w+[._-]?\w*){1,2}@(\w+).\w{2,3}([.]\w{2,3})?[ |\n]";
             Regex regex = new Regex(wholeEmailPattern);
             MatchCollection matchCollection = regex.Matches(rawFile);
-            Console.WriteLine(matchCollection.First().Groups[2].Value);
-            
+            // Console.WriteLine(matchCollection.First().Groups[2].Value);
+
             foreach (Match match in matchCollection)
             {
                 string domain = match.Groups[2].Value;
-                
+
                 if (dict.ContainsKey(domain))
                 {
                     dict[domain]++;
                     continue;
                 }
-                dict.Add(domain,1);
+
+                dict.Add(domain, 1);
             }
 
-            return dict;
+            return dict.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
         }
-        
 
-
+        static void PrintDictionary(Dictionary<string, int> dict)
+        {
+            foreach (var domain in dict)
+            {
+                Console.WriteLine($"Domain: {domain.Key} - Value: {domain.Value.ToString()}");
+            }
+        }
     }
 }
